@@ -1,6 +1,6 @@
 {
-  "name": "@soda/friendly-errors-webpack-plugin",
-  "version": "1.8.1",
+  "name": "@malagu/friendly-errors-webpack-plugin",
+  "version": "1.9.1",
   "description": "Recognizes certain classes of webpack errors and cleans, aggregates and prioritizes them to provide a better Developer Experience",
   "main": "index.js",
   "engines": {
@@ -19,13 +19,13 @@
     "webpack",
     "plugin"
   ],
-  "author": "Geoffroy Warin",
+  "author": "Malagu",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sodatea/friendly-errors-webpack-plugin.git"
+    "url": "git+https://github.com/JarynChen/friendly-errors-webpack-plugin"
   },
   "bugs": {
-    "url": "https://github.com/sodatea/friendly-errors-webpack-plugin/issues"
+    "url": "https://github.com/JarynChen/friendly-errors-webpack-plugin/issues"
   },
   "license": "MIT",
   "jest": {
@@ -37,7 +37,7 @@
     ]
   },
   "peerDependencies": {
-    "webpack": "^4.0.0 || ^5.0.0"
+    "webpack": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.5.4",
@@ -63,7 +63,7 @@
     "sass": "^1.20.1",
     "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",
-    "webpack": "^4.31.0"
+    "webpack": "^5.68.0"
   },
   "dependencies": {
     "chalk": "^3.0.0",

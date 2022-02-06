@@ -7,6 +7,7 @@ const transformErrors = require('./core/transformErrors');
 const formatErrors = require('./core/formatErrors');
 const output = require('./output');
 const utils = require('./utils');
+const DefaultStatsFactoryPlugin = require("webpack/lib/stats/DefaultStatsFactoryPlugin");
 
 const concat = utils.concat;
 const uniqueBy = utils.uniqueBy;
@@ -37,11 +38,12 @@ class FriendlyErrorsWebpackPlugin {
 
   apply(compiler) {
 
-    const doneFn = stats => {
+    const doneFn = (stats, compilation) => {
       this.clearConsole();
 
-      const hasErrors = stats.hasErrors();
-      const hasWarnings = stats.hasWarnings();
+      stats.toString();
+      const hasErrors = compilation.getErrors().length > 0;
+      const hasWarnings = compilation.getWarnings().length > 0;
 
       if (!hasErrors && !hasWarnings) {
         this.displaySuccess(stats);
@@ -49,12 +51,12 @@ class FriendlyErrorsWebpackPlugin {
       }
 
       if (hasErrors) {
-        this.displayErrors(extractErrorsFromStats(stats, 'errors'), 'error');
+        this.displayErrors(extractErrorsFromStats(stats, 'errors',compilation), 'error');
         return;
       }
 
       if (hasWarnings) {
-        this.displayErrors(extractErrorsFromStats(stats, 'warnings'), 'warning');
+        this.displayErrors(extractErrorsFromStats(stats, 'warnings',compilation), 'warning');
       }
     };
 
@@ -65,8 +67,12 @@ class FriendlyErrorsWebpackPlugin {
 
     if (compiler.hooks) {
       const plugin = { name: 'FriendlyErrorsWebpackPlugin' };
+      compiler.hooks.afterCompile.tap(plugin, compilation => {
+        compiler.hooks.done.tap(plugin, stats => {
+          doneFn(stats, compilation)
+        });
+      });
 
-      compiler.hooks.done.tap(plugin, doneFn);
       compiler.hooks.invalid.tap(plugin, invalidFn);
     } else {
       compiler.plugin('done', doneFn);
@@ -134,27 +140,12 @@ class FriendlyErrorsWebpackPlugin {
   }
 }
 
-function extractErrorsFromStats(stats, type) {
-  if (isMultiStats(stats)) {
-    const errors = stats.stats
-      .reduce((errors, stats) => errors.concat(extractErrorsFromStats(stats, type)), []);
-    // Dedupe to avoid showing the same error many times when multiple
-    // compilers depend on the same module.
-    return uniqueBy(errors, error => error.message);
-  }
-
+function extractErrorsFromStats(stats, type, compilation) {
   const findErrorsRecursive = (compilation) => {
-    const errors = compilation[type];
-    if (errors.length === 0 && compilation.children) {
-      for (const child of compilation.children) {
-        errors.push(...findErrorsRecursive(child));
-      }
-    }
-
+    const errors = type === 'warnings' ? compilation.getWarnings() : compilation.getErrors();
     return uniqueBy(errors, error => error.message);
   };
-
-  return findErrorsRecursive(stats.compilation);
+  return findErrorsRecursive(compilation);
 }
 
 function isMultiStats(stats) {
