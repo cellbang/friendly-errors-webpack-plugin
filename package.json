@@ -22,10 +22,10 @@
   "author": "Malagu",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JarynChen/friendly-errors-webpack-plugin"
+    "url": "git+https://github.com/cellbang/friendly-errors-webpack-plugin"
   },
   "bugs": {
-    "url": "https://github.com/JarynChen/friendly-errors-webpack-plugin/issues"
+    "url": "https://github.com/cellbang/friendly-errors-webpack-plugin/issues"
   },
   "license": "MIT",
   "jest": {
