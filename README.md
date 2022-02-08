@@ -20,7 +20,7 @@ npm install friendly-errors-webpack-malagu --save-dev
 Simply add `FriendlyErrorsWebpackPlugin` to the plugin section in your Webpack config.
 
 ```javascript
-var FriendlyErrorsWebpackPlugin = require('@soda/friendly-errors-webpack-plugin');
+var FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-malagu');
 
 var webpackConfig = {
   // ...
