@@ -1,5 +1,5 @@
 {
-  "name": "@malagu/friendly-errors-webpack-plugin",
+  "name": "friendly-errors-webpack-malagu",
   "version": "1.9.1",
   "description": "Recognizes certain classes of webpack errors and cleans, aggregates and prioritizes them to provide a better Developer Experience",
   "main": "index.js",
