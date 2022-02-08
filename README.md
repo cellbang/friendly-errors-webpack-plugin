@@ -12,7 +12,7 @@ errors get handled, please open a [PR](https://help.github.com/articles/creating
 ### Installation
 
 ```bash
-npm install @malagu/friendly-errors-webpack-plugin --save-dev
+npm install friendly-errors-webpack-malagu --save-dev
 ```
 
 ### Basic usage
