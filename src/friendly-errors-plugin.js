@@ -1,13 +1,9 @@
 'use strict';
 
-const path = require('path');
-const chalk = require('chalk');
-const os = require('os');
 const transformErrors = require('./core/transformErrors');
 const formatErrors = require('./core/formatErrors');
 const output = require('./output');
 const utils = require('./utils');
-const DefaultStatsFactoryPlugin = require("webpack/lib/stats/DefaultStatsFactoryPlugin");
 
 const concat = utils.concat;
 const uniqueBy = utils.uniqueBy;
@@ -37,26 +33,40 @@ class FriendlyErrorsWebpackPlugin {
   }
 
   apply(compiler) {
-
+    let hasBackend = false;
+    let hasFrontend = false;
+    let currentMode = '';
     const doneFn = (stats, compilation) => {
       this.clearConsole();
-
       stats.toString();
       const hasErrors = compilation.getErrors().length > 0;
       const hasWarnings = compilation.getWarnings().length > 0;
 
+      this.compilationSuccessInfo.messages.forEach(message => {
+        if (message.includes('frontend')) {
+          currentMode = 'frontend';
+        } else if (message.includes('backend')) {
+          currentMode = 'backend'
+        }
+      })
       if (!hasErrors && !hasWarnings) {
-        this.displaySuccess(stats);
+        if (currentMode == 'frontend' && !hasFrontend) {
+          this.displaySuccess(stats);
+          hasFrontend = true;
+        } else if (currentMode == 'backend' && !hasBackend) {
+          this.displaySuccess(stats);
+          hasBackend = true;
+        }
         return;
       }
 
       if (hasErrors) {
-        this.displayErrors(extractErrorsFromStats(stats, 'errors',compilation), 'error');
+        this.displayErrors(extractErrorsFromStats(stats, 'errors', compilation), 'error');
         return;
       }
 
       if (hasWarnings) {
-        this.displayErrors(extractErrorsFromStats(stats, 'warnings',compilation), 'warning');
+        this.displayErrors(extractErrorsFromStats(stats, 'warnings', compilation), 'warning');
       }
     };
 
@@ -72,7 +82,6 @@ class FriendlyErrorsWebpackPlugin {
           doneFn(stats, compilation)
         });
       });
-
       compiler.hooks.invalid.tap(plugin, invalidFn);
     } else {
       compiler.plugin('done', doneFn);
