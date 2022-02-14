@@ -73,7 +73,6 @@ class FriendlyErrorsWebpackPlugin {
       const plugin = { name: 'FriendlyErrorsWebpackPlugin' };
       compiler.hooks.afterCompile.tap(plugin, compilation => {
         if (hasErrors(compilation) || hasWarnings(compilation)) {
-          isSuccess = false;
           compiler.hooks.done.tap(plugin, stats => {
             doErrors(stats, compilation)
           });
@@ -83,7 +82,6 @@ class FriendlyErrorsWebpackPlugin {
               doneFn(stats)
               doSuccess(stats)
             }
-
           });
         }
       });
