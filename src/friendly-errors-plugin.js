@@ -33,42 +33,36 @@ class FriendlyErrorsWebpackPlugin {
   }
 
   apply(compiler) {
-    let hasBackend = false;
-    let hasFrontend = false;
-    let currentMode = '';
-    const doneFn = (stats, compilation) => {
-      this.clearConsole();
+    let currentIndex = 0;
+    
+    const doneFn = (stats) => {
+      currentIndex++;
       stats.toString();
-      const hasErrors = compilation.getErrors().length > 0;
-      const hasWarnings = compilation.getWarnings().length > 0;
+    };
 
-      this.compilationSuccessInfo.messages.forEach(message => {
-        if (message.includes('frontend')) {
-          currentMode = 'frontend';
-        } else if (message.includes('backend')) {
-          currentMode = 'backend'
-        }
-      })
-      if (!hasErrors && !hasWarnings) {
-        if (currentMode == 'frontend' && !hasFrontend) {
-          this.displaySuccess(stats);
-          hasFrontend = true;
-        } else if (currentMode == 'backend' && !hasBackend) {
-          this.displaySuccess(stats);
-          hasBackend = true;
-        }
-        return;
-      }
-
-      if (hasErrors) {
+    const doErrors = (stats, compilation) => {
+      if (hasErrors(compilation)) {
         this.displayErrors(extractErrorsFromStats(stats, 'errors', compilation), 'error');
         return;
       }
-
-      if (hasWarnings) {
+      if (hasWarnings(compilation)) {
         this.displayErrors(extractErrorsFromStats(stats, 'warnings', compilation), 'warning');
+        return;
       }
-    };
+    }
+
+    const doSuccess = (stats) => {
+      this.clearConsole();
+      this.displaySuccess(stats);
+      return;
+    }
+
+    const hasErrors = (compilation) => {
+      return compilation.getErrors().length > 0;
+    }
+    const hasWarnings = (compilation) => {
+      return compilation.getWarnings().length > 0;
+    }
 
     const invalidFn = () => {
       this.clearConsole();
@@ -78,9 +72,20 @@ class FriendlyErrorsWebpackPlugin {
     if (compiler.hooks) {
       const plugin = { name: 'FriendlyErrorsWebpackPlugin' };
       compiler.hooks.afterCompile.tap(plugin, compilation => {
-        compiler.hooks.done.tap(plugin, stats => {
-          doneFn(stats, compilation)
-        });
+        if (hasErrors(compilation) || hasWarnings(compilation)) {
+          isSuccess = false;
+          compiler.hooks.done.tap(plugin, stats => {
+            doErrors(stats, compilation)
+          });
+        } else {
+          compiler.hooks.done.tap(plugin, stats => {
+            if (currentIndex == 0) {
+              doneFn(stats)
+              doSuccess(stats)
+            }
+
+          });
+        }
       });
       compiler.hooks.invalid.tap(plugin, invalidFn);
     } else {
