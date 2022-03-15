@@ -4,6 +4,8 @@ const transformErrors = require('./core/transformErrors');
 const formatErrors = require('./core/formatErrors');
 const output = require('./output');
 const utils = require('./utils');
+let currentBackend = 0;
+let currentFrontend = 0;
 
 const concat = utils.concat;
 const uniqueBy = utils.uniqueBy;
@@ -33,10 +35,16 @@ class FriendlyErrorsWebpackPlugin {
   }
 
   apply(compiler) {
-    let currentIndex = 0;
-    
+
+
     const doneFn = (stats) => {
-      currentIndex++;
+      if (this.compilationSuccessInfo.target == 'backend') {
+        currentBackend++;
+      }
+      if (this.compilationSuccessInfo.target == 'frontend') {
+        currentFrontend++;
+      }
+
       stats.toString();
     };
 
@@ -52,8 +60,10 @@ class FriendlyErrorsWebpackPlugin {
     }
 
     const doSuccess = (stats) => {
+
       this.clearConsole();
       this.displaySuccess(stats);
+
       return;
     }
 
@@ -67,6 +77,7 @@ class FriendlyErrorsWebpackPlugin {
     const invalidFn = () => {
       this.clearConsole();
       output.title('info', 'WAIT', 'Compiling...');
+      return;
     };
 
     if (compiler.hooks) {
@@ -76,13 +87,16 @@ class FriendlyErrorsWebpackPlugin {
           compiler.hooks.done.tap(plugin, stats => {
             doErrors(stats, compilation)
           });
-        } else {
-          compiler.hooks.done.tap(plugin, stats => {
-            if (currentIndex == 0) {
-              doneFn(stats)
-              doSuccess(stats)
-            }
-          });
+          return;
+        }
+      });
+      compiler.hooks.done.tap(plugin, stats => {
+        const targetInfo = this.compilationSuccessInfo.messages[0].split(' ')[1].toString();
+        this.compilationSuccessInfo.target = targetInfo.indexOf('backend') != -1 ? 'backend' : 'frontend';
+        output.log();
+        if ((this.compilationSuccessInfo.target == 'backend' && currentBackend == 0) || (this.compilationSuccessInfo.target == 'frontend' && currentFrontend == 0)) {
+          doneFn(stats)
+          doSuccess(stats)
         }
       });
       compiler.hooks.invalid.tap(plugin, invalidFn);
@@ -101,7 +115,6 @@ class FriendlyErrorsWebpackPlugin {
   displaySuccess(stats) {
     const time = isMultiStats(stats) ? this.getMultiStatsCompileTime(stats) : this.getStatsCompileTime(stats);
     output.title('success', 'DONE', 'Compiled successfully in ' + time + 'ms');
-
     if (this.compilationSuccessInfo.messages) {
       this.compilationSuccessInfo.messages.forEach(message => output.info(message));
     }
