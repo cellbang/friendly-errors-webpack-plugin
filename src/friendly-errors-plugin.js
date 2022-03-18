@@ -36,7 +36,6 @@ class FriendlyErrorsWebpackPlugin {
 
   apply(compiler) {
 
-
     const doneFn = (stats) => {
       if (this.compilationSuccessInfo.target == 'backend') {
         currentBackend++;
@@ -48,13 +47,13 @@ class FriendlyErrorsWebpackPlugin {
       stats.toString();
     };
 
-    const doErrors = (stats, compilation) => {
+    const doErrors = (compilation) => {
       if (hasErrors(compilation)) {
-        this.displayErrors(extractErrorsFromStats(stats, 'errors', compilation), 'error');
+        this.displayErrors(extractErrorsFromStats('errors', compilation), 'error');
         return;
       }
       if (hasWarnings(compilation)) {
-        this.displayErrors(extractErrorsFromStats(stats, 'warnings', compilation), 'warning');
+        this.displayErrors(extractErrorsFromStats('warnings', compilation), 'warning');
         return;
       }
     }
@@ -84,19 +83,16 @@ class FriendlyErrorsWebpackPlugin {
       const plugin = { name: 'FriendlyErrorsWebpackPlugin' };
       compiler.hooks.afterCompile.tap(plugin, compilation => {
         if (hasErrors(compilation) || hasWarnings(compilation)) {
-          compiler.hooks.done.tap(plugin, stats => {
-            doErrors(stats, compilation)
-          });
+          doErrors(compilation);
           return;
         }
       });
       compiler.hooks.done.tap(plugin, stats => {
         const targetInfo = this.compilationSuccessInfo.messages[0].split(' ')[1].toString();
         this.compilationSuccessInfo.target = targetInfo.indexOf('backend') != -1 ? 'backend' : 'frontend';
-        output.log();
         if ((this.compilationSuccessInfo.target == 'backend' && currentBackend == 0) || (this.compilationSuccessInfo.target == 'frontend' && currentFrontend == 0)) {
-          doneFn(stats)
-          doSuccess(stats)
+          doneFn(stats);
+          doSuccess(stats);
         }
       });
       compiler.hooks.invalid.tap(plugin, invalidFn);
@@ -165,7 +161,7 @@ class FriendlyErrorsWebpackPlugin {
   }
 }
 
-function extractErrorsFromStats(stats, type, compilation) {
+function extractErrorsFromStats(type, compilation) {
   const findErrorsRecursive = (compilation) => {
     const errors = type === 'warnings' ? compilation.getWarnings() : compilation.getErrors();
     return uniqueBy(errors, error => error.message);
