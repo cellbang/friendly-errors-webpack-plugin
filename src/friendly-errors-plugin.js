@@ -6,7 +6,7 @@ const output = require('./output');
 const utils = require('./utils');
 let currentBackend = 0;
 let currentFrontend = 0;
-
+let currentError = false;
 const concat = utils.concat;
 const uniqueBy = utils.uniqueBy;
 
@@ -83,6 +83,7 @@ class FriendlyErrorsWebpackPlugin {
       const plugin = { name: 'FriendlyErrorsWebpackPlugin' };
       compiler.hooks.afterCompile.tap(plugin, compilation => {
         if (hasErrors(compilation) || hasWarnings(compilation)) {
+          currentError = true;
           doErrors(compilation);
           return;
         }
@@ -90,6 +91,10 @@ class FriendlyErrorsWebpackPlugin {
       compiler.hooks.done.tap(plugin, stats => {
         const targetInfo = this.compilationSuccessInfo.messages[0].split(' ')[1].toString();
         this.compilationSuccessInfo.target = targetInfo.indexOf('backend') != -1 ? 'backend' : 'frontend';
+        if (currentError) {
+          currentError = false;
+          return;
+        }
         if ((this.compilationSuccessInfo.target == 'backend' && currentBackend == 0) || (this.compilationSuccessInfo.target == 'frontend' && currentFrontend == 0)) {
           doneFn(stats);
           doSuccess(stats);
